@@ -36,10 +36,8 @@
       - "*.usegalaxy.eu"
       - "galaxyproject.eu"
       - "*.galaxyproject.eu"
-      - "*.interactivetoolentrypoint.interactivetool.usegalaxy.eu"
-      - "*.interactivetoolentrypoint.interactivetool.live.usegalaxy.eu"
-      - "*.interactivetoolentrypoint.interactivetool.test.usegalaxy.eu"
   vars_files:
+    - group_vars/sn07.yml
     - group_vars/tiaas.yml # All of the training infrastructure
     - group_vars/gxconfig.yml # The base galaxy configuration
     - group_vars/toolbox.yml # User controlled toolbox
@@ -60,8 +58,8 @@
   handlers:
     - name: Restart Galaxy
       shell: |
-        echo 'Manual web handler restart required' && cd /opt/galaxy/ && source /opt/galaxy/.bashrc  && systemctl restart galaxy-handler@* && systemctl restart galaxy-workflow-scheduler@*
-
+        cd /opt/galaxy/ && source /opt/galaxy/.bashrc && systemctl restart galaxy-handler@* && systemctl restart galaxy-workflow-scheduler@*
+      listen: "restart galaxy"
   pre_tasks:
     - name: Install Dependencies
       package:
@@ -105,6 +103,7 @@
         state: present
         key: "{{ item }}"
       loop:
+        - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCtMvCQL1Xw/DrzO/U4nfyIL6CE63apSXHjQByWK+vWpfNkBjMh4uwQl6SzWvCn6y7tlMko1P6BG9bVDkWLLjC/kL+ds+FXDwUyLmRcfyhkortBVMWrZO3ZSSimpFugPDcfUeh+iim/Jg2CY1geVmlA9bybY8k0hGTKa5rn9KzbLCoZdsR1c9627PAefV9lr7xTHMamWsG0cIYjkOBqZM85Yw9huftUGZi1SAALjiG3k57XFswZcHrvZkE/L5Q5uU9NC0KYVapzG9PYmgU+O40Oi82PB4C6SWoOM0MG39AIS4DU7DstF3mrl2M/6crbcHIfVTB+GCQI2U9CzfvlhA6qQu+xlAc4ZX/rXeYZvNW6QtU1vvUcL95wSrPyXlqlSA6o/0T0EP8e2LG2JpNtzorcLrj010fWdpH1jY/c9ZACYNmCPuUTD/ASt5FXCqPR0WJnf4Mle10ALmghsbm7vLXQUKDcQSC4bJKpgzdFT2ocmk9jiGqCq3hivSVmR6OvHok= paul@paul-LIFEBOOK-U7410"
         - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDC6kanRFWmhjkV8pkwOYtHoCNDIP/nj2umigbSylMFmiXm2rwnqi1qhDeJqd53PTrT4RWynT7Gqg7/HSITPAZA4wdGNcDLHD7QvexBDhIhUJCERmMZa6EWPvOPgDACbJDjrwLxd8oF65UhQU+meVrkBmpod6YDSuVIfmZXHUheK7NuZfvfNx3ruQNU5MRbI3p6vuY++B4GYRXrxM68+GWYEOEa6zz142Nl1PNnvDMkiobro0k6P5bXv4LDYMW3YyDXu69okJgPqEKjE/IsI4/2JKfzduEZMQyPZDQswyuNQwMAfKQjvDQ0gvQiVE0eM2gdR7qi/jOqFXrzkOwYWQd00Cy9EtSWqhDlpu9KrIfs8T2HTn9p/XU+Bwg4anyMh//gb+EOctpvptqoBhjNxoRTX/bwNLFq/ARFAtFDn+qX8w9HWeB5/vNvdOkH7fSMTTFmFkDZ8U/Hrg5vhcwy2Hid2K7j9peixB/41d7/O08qL99qH9362L8ZmhyT9aNeOKQ0MUEEhAasYkKO7AQcChDpkgW635mkvI5EOZGsqCRPiX8P8iTH5neH6ZI4H21JoON5E0raMJlwznNq3D4as12kZBtw198DHFAMQXlfMR24NTcv0nFnS6JmxlwCKu+Uzyt3Xlyj/wEzKYnr71vfShb3/vUgYbzIEdDQmGV8DXEJBw== anup"
         - "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEApcUIRRUHl0wVVXz5GX1QnHSq9+nThIKKH3fYM21LfW1n6gGvC7UiCCaDZQUbejJTq3EITbH3J6/Tji2jGAIJ6Xzn0Jf7sQ1yON/dO/75To32Jdo8YWS7XQeA7lU9heSc7FM5yKIBJN7PrpnYAveCsOE/1kkfUSsBZsqj9yyoFe/tquoVm5Y3nFZfKJv7/gszSVkzNxhHvn+0ccClRLpnFUHjqXgXHIQCm7P/9Lf7unSoYRd9Iefwgp52Lcm6AIncQvz5tdAFD2WciP4J15EFPMTKPdc6tfT5Tis/+/oNfYlsnaIGrbV5Hc2909KiYnvuvqKcrSFloXWzAdXJOxhszw== videmp@cn001.bi.uni-freiburg.de"
         - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8/9GdD96Xfc0MavIJQEuNSIrOlaBSYkH4s5RyGhNnc8Al7x3hC7KXt/mcqyNoI1JTvrXp23aDpTr67e3Dnrp6Me7z8nyY9oIy5WHOgwG2ra1Ga8oi89MVgXPhtxvcYnk8hVfuPDmhWkgwS5ILH/7V/1hEKHcS0H7Q0pJp8EGCBDFWrxNfUWqJJuVcXb11CMnaSJX/VhD+S4g4rG01lMr696+k8eKs9y2sq9JpuUD1TNN16RYu1uVlVz8nhIPbEBsnFeKV+EYKLcSRQnjDTNjWqZHHM9NMWfK3wGvr5pfla158ZdsYQTmQtcchTsEoB+7eAQaER3XsEtuo8yQj4zbL videmp@work"
@@ -116,6 +115,7 @@
         - "ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBADKblzzPBc3+dEfFvhJQHsHGkFFN6ORjfXo71P1OutwcKEMCIcNkZKJHhYkLLrfTDN5JJ5tK2L5AaSxdwETofwm4AG1xv3LuoYsXC6e3sjKi09BVmzef520pIMW+rvL+hESwSazZaUAC0wDcH4aNDTonZYcAY87rpMX7pNMkNPJvWilUA== mira"
         - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFH54+qZEBeU5uwIeWWOViLcC509qxoRW6oN0VHRQr4r nate"
         - "ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBABRaLHL8mgW86rbtdUh6TY4rs7/la8hAGeSQ3jBF7LMwYZnbS32YDMYvDq3KgNu5WqSMFvkxNm3vfTAbd8CXBfakwDBFBaD9kO0b2t4/p4VoFUsd3B2OvmTR7Bsg7OxTGJJ7aUP/SzTg+Z4NzsmHwQ9h31gfI7n/buZD4S1edQke19Y6w== dominguj@informatik.uni-freiburg.de"
+        - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3UNEZrYCERrpZl/NzL9/q2dOyJJT0Ini6AEmFyPubh6yaVf4Iko+8MVYUx92RKuaY5bE8cC7JcLRZMKZ2lPVkP5tUUwILl2d2/sWlHnyZ1oGdOTfPB6b+boDansJcm3HnREO7umAqgbUErahWIDWOk3SPXOxirqsWrElNm5pKr8Ng8KWz9Ht9/J0oDxPxwYQcz64ogT7ERtCn3+UoEM/XQ4iVHvAk/rwLev8symd5SzrxFt6nI2vqduFBEMoA2VTISuI0rYVFqYpQ7I4QxOl5GbNHUeuvB5+YKh5P2QAi9mOPdp8MO2ZJnjtT+x7EgJKXHu2EBKDwW/93bPfL5SGFUK80HSyYG8sicSYpAUk1asE+T90QvpGUrXPaIabWXHvhj7vq7Y6l103o9T4N2qCpe8e4e3WthGzYu9Tfau7vko7pd+F7rnkvjvmj+WmSJPv+jadpMDyiUyYEIj4ncik89FOWIzt/IYYiC+po6nmD1del4s0Zenr2gEEsjyhvOiPLI7+Bw+w4m/xiHvlP1s40ZtIsUhwOYBEQUbfoHG0zR4jIgD8h/VA47oAvkNDGKJpkEbXpRpUtQxJLDNcnUFjEG86+NGWOuXzwllrH80TFueSFVg9dHu8d5Jx5m9LeZbf+vRnpSpIgQlVR/C4hFFYtK44/Daz+TqOXMgQqabypfQ== catherine.bromhead@unimelb.edu.au"
 
     # Add SELinux policy for nginx to interact with the gunicorn socket
     - name: Check if nginx-gunicorn selinux policy is installed
@@ -160,24 +160,18 @@
         - http
         - https
 
-    - name: Change compliance.log file ownership to the galaxy user
-      file:
-        path: "{{ galaxy_server_dir }}/compliance.log"
-        owner: galaxy
-        group: root
-        mode: 0644
-
+    - name: Configure firewalld to open ports
+      firewalld:
+        port: "{{ item }}"
+        immediate: true
+        permanent: true
+        state: enabled
+      with_items:
+        - 9628/tcp # HTCondor shared port
   roles:
     ## Starting configuration of the operating system
-    - role: usegalaxy_eu.handy.os_setup
-      vars:
-        enable_hostname: true
-        enable_powertools: true # geerlingguy.repo-epel role doesn't enable PowerTools repository
-        enable_remap_user: true
-        enable_exclude_packages: true
-        enable_pam_limits: true # Prevent out of control processes
-        enable_install_software: true # Some extra admin tools (*top, vim, etc)
-    - geerlingguy.repo-epel # Install EPEL repository
+    - usegalaxy_eu.handy.os_setup
+    - geerlingguy.repo-epel
 
     ## Istall miniconda, create a _galaxy_ environment and install Packages
     ## Galaxy will use the virtualenv from this conda environment (see
@@ -190,57 +184,54 @@
           - python=3.11
           - pip
 
-    - usegalaxy-eu.autoupdates # keep all of our packages up to date
-    - influxdata.chrony # Keep our time in sync.
+    - usegalaxy-eu.autoupdates
+    - influxdata.chrony
 
     ## Filesystems
-    - usegalaxy-eu.autofs # Setup the mount points which will be needed later
-    - galaxyproject.cvmfs # Galaxy datasets
+    - usegalaxy-eu.autofs
+    - galaxyproject.cvmfs
 
     ## Monitoring
-    # this should be unique, because it sends data to about the cluster to influxDB
-    #- hxr.monitor-cluster
-    - hxr.monitor-email
-    - hxr.monitor-galaxy-journalctl
-    # - usegalaxy-eu.monitor-disk-access-time merged with usegalaxy-eu.monitoring
-    # uses the nfsstat command only
-    - usegalaxy-eu.monitoring
+    # - hxr.monitor-galaxy-journalctl # Need to update the telegraf script to include the hostname for clarity
 
     # Setup Galaxy user
     - role: galaxyproject.galaxy
       vars:
         galaxy_create_user: true
         galaxy_manage_clone: false
+        galaxy_manage_cleanup: false
         galaxy_manage_download: false
         galaxy_manage_existing: true
         galaxy_manage_paths: true
         galaxy_manage_static_setup: false
         galaxy_manage_mutable_setup: false
         galaxy_manage_database: false
+        galaxy_manage_themes: false
+        galaxy_manage_subdomain_static: false
         galaxy_fetch_dependencies: false
         galaxy_build_client: false
+        galaxy_manage_systemd: false
+        galaxy_manage_gravity: false
+
     # The bashrc needs to be created for several later features.
     - usegalaxy-eu.bashrc
-
-    # HTCondor Cluster setup
-    # - usegalaxy_eu.htcondor
 
     # Misc.
     - role: hxr.galaxy-nonreproducible-tools
       become: true
       become_user: galaxy
-    - usegalaxy-eu.dynmotd # nicer MOTD/welcome message
+    - usegalaxy-eu.dynmotd
     # - usegalaxy-eu.rsync-to-nfs # sync codebase to NFS
-    - role: usegalaxy-eu.webhooks # Clone webhook repository
+    - role: usegalaxy-eu.webhooks
       become: true
       become_user: galaxy
-    - role: usegalaxy-eu.tours # Clone tour repository
+    - role: usegalaxy-eu.tours
       become: true
       become_user: galaxy
 
     ## SSL / Security
     # https://en.wikipedia.org/wiki/Trust_on_first_use
-    - ssh-host-sign # Sign the server host key to prevent TOFU for SSH
+    - ssh-host-sign
     - hxr.aws-cli # Setup the AWS client that will be needed for route53 authentication of certbot. MUST come before nginx role
 
     ## GALAXY
@@ -248,20 +239,24 @@
     - galaxyproject.gxadmin
     - usegalaxy_eu.ansible_nginx_upload_module
     - usegalaxy-eu.nginx
-    # TODO move under monitoring + telegraf.
-    # Role that creates a cron to gather galaxy stats, neets to run only on one node
-    #- usegalaxy-eu.galaxy-slurp
     - usegalaxy-eu.gapars-galaxy
+
     # The REAL galaxy role
     - role: galaxyproject.galaxy
       vars:
         galaxy_create_user: true
         galaxy_manage_clone: true
+        galaxy_manage_cleanup: false
         galaxy_manage_download: false
         galaxy_manage_existing: false
         galaxy_manage_static_setup: true
         galaxy_manage_mutable_setup: true
         galaxy_manage_database: true
+        galaxy_manage_themes: false
+        galaxy_manage_subdomain_static: true
+        galaxy_manage_host_filters: false # test when themes work
+        galaxy_manage_systemd: false # switch to gravity(?)
+        galaxy_manage_gravity: false
         galaxy_fetch_dependencies: true
         galaxy_build_client: true
 
@@ -274,34 +269,21 @@
     - hxr.install-to-venv # Some extra packages our site needs.
     - usegalaxy_eu.galaxy_systemd # Manage the Galaxy processes with SystemD
     - usegalaxy-eu.update-hosts # Update hosts list
-    - usegalaxy_eu.gie_proxy # Setup the NodeJS proxy for GxIT
-    - usegalaxy-eu.subdomain-themes # Custom subdomain themes
+    # - usegalaxy_eu.gie_proxy # Setup the NodeJS proxy for GxIT (only on one head node due to the issue with sqlite on NFS)
     # This is mixed: schedules cron to submit condor jobs that clean up dirs
     # also cleans up docker and 'gxadmin cleanup 60'
     #- usegalaxy_eu.fs_maintenance # Filesystems maintenance
     - usegalaxy-eu.error-pages # Copy the NGINX error pages
     # Needs to run only on one machine, and only if condor is actually available
-    #- usegalaxy-eu.htcondor_release # Condor release held jobs increasing memory
+    # - usegalaxy-eu.htcondor_release # Condor release held jobs increasing memory
     # Various ugly fixes
+    - usegalaxy-eu.fix-unscheduled-jobs
     - usegalaxy-eu.fix-stuck-handlers # Restart handlers to prevent several classes of issues
     # first one sets the logrotate.d config for galaxy, second vacuums galaxy-xxx@* at midnight
     - usegalaxy-eu.logrotate # Rotate galaxy logs on headnodes
     - usegalaxy-eu.log-cleaner # do not retain journalctl logs, they are unnecessary/risky under GDPR
-
-    #- usegalaxy-eu.fix-ancient-ftp-data # Remove FTP data older than 3 months, create FTP user directories
-
-    # Some of our 'cleanups' also generate telegraf format so this goes at end.
-    # 25.11.2022: Moved here becuase the galaxy-procstat role fails
-    # as it is not able to find the /etc/telegraf/telegraf.d/ directory
     - dj-wasabi.telegraf
     # This one creates telegraf plugins for the galaxy-xxxx@* services (now with gunicorn!)
     - usegalaxy-eu.galaxy-procstat # Some custom telegraf monitoring that's templated
-    # This can be moved to maintenance machine (gxadmin mutate ...)
-    #- usegalaxy-eu.fix-user-quotas # Automatically attribute ELIXIR quota to ELIXIR AAI user on a regular basis
-
-    # - dev-sec.os-hardening
-    - ssh_hardening #dev-sec.hardening collection
-
-    ## Setup docker commented on 11/30/2022, remove if everything works
-    #- geerlingguy.docker
+    - ssh_hardening
     - usegalaxy_eu.tpv_auto_lint

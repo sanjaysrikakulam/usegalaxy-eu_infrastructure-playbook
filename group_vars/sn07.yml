@@ -1,5 +1,12 @@
 ---
-# packages
+# Role: usegalaxy_eu.handy.os_setup
+enable_hostname: true
+enable_powertools: true
+enable_remap_user: true
+enable_exclude_packages: true
+enable_pam_limits: true
+enable_install_software: true
+enable_create_user: true
 software_groups_to_install:
   - admin
   - debug
@@ -8,16 +15,29 @@ software_groups_to_install:
   - services
   - terminals
   - utils
+# User conf is fetched from the group_vars/all.yml
+handy_users:
+  - user_name: '{{ galaxy_user.name }}'
+    user_uid: '{{ galaxy_user.uid }}'
+    user_group: '{{ galaxy_group.name }}'
+    user_comment: 'Galaxy useraccount'
+    user_create_home: '{{ galaxy_user.create_home }}'
+    user_home: '{{ galaxy_user.home }}'
+    user_shell: '{{ galaxy_user.shell }}'
+handy_groups:
+  - group_name: '{{ galaxy_group.name }}'
+    group_gid: '{{ galaxy_group.gid }}'
 
-# Docker
-docker_users:
-  - galaxy
+# Role: hxr.postgres-connection
+postgres_user: galaxy
+postgres_host: sn05.galaxyproject.eu
+postgres_port: 5432
 
-# Autofs
-autofs_service.install: true
-autofs_service.enable: true
+# Role: usegalaxy-eu.autofs
+autofs_service:
+  install: true
+  enable: true
 nfs_kernel_tuning: true
-
 autofs_mount_points:
   - data
   - gxtest
@@ -25,60 +45,29 @@ autofs_mount_points:
   - jwd
   - usrlocal
 
-# Miniconda role variables (galaxyproject.miniconda)
+# Role: usegalaxy-eu.bashrc
+galaxy_pulsar_app_conf: '{{ galaxy_config_dir }}/pulsar_app.yml'
+bashrc_users:
+  - uname: '{{ galaxy_user.name }}'
+    uhome: '{{ galaxy_user.home }}'
+    gname: '{{ galaxy_group.name }}'
+
+# Role: hxr.postgres-connection
+pgc_users:
+  - uname: '{{ galaxy_user.name }}'
+    uhome: '{{ galaxy_user.home }}'
+    gname: '{{ galaxy_group.name }}'
+    pguser: '{{ postgres_user }}'
+    pgpass: '{{ postgres_pass }}'
+    pgdatabase: galaxy
+
+# Role: galaxyproject.miniconda
 conda_prefix: /opt/miniconda
 
-# fs-maintenance
-# Remove this if fs_maintenance was moved to maintenance machine, otherwise activate it with condor on sn07
+# Role: usegalaxy_eu.fs_maintenance
+# Run only on one head node
 #fsm_maintenance_dir: "/data/dnb01/maintenance"
-#
-#fsm_scripts:
-#  temporary_dirs:
-#    enable: true
-#    src: "temporary_dirs.sh.j2"
-#    dst: "{{ fsm_maintenance_dir }}/temporary_dirs.sh"
-#    user: "{{ fsm_galaxy_user.username }}"
-#    group: "{{ fsm_galaxy_user.groupname }}"
-#    paths:
-#      - /data/2/galaxy_db/tmp
-#      - /data/dnb01/galaxy_db/tmp
-#      - /data/dnb02/galaxy_db/tmp
-#      - /data/dnb-ds03/galaxy_db/tmp
-#      - /data/jwd/tmp
-#    time: "{{ fsm_intervals.long }}"
-#  upload_dirs:
-#    enable: true
-#    src: "uploads.sh.j2"
-#    dst: "{{ fsm_maintenance_dir }}/uploads.sh"
-#    user: "{{ fsm_galaxy_user.username }}"
-#    group: "{{ fsm_galaxy_user.groupname }}"
-#    paths:
-#      - "{{ galaxy_config['galaxy']['nginx_upload_store'] }}"
-#      - "{{ galaxy_config['galaxy']['nginx_upload_job_files_store'] }}"
-#    time: "{{ fsm_intervals.medium }}"
-#  job_working_dirs:
-#    enable: true
-#    src: "job_working_dir.sh.j2"
-#    dst: "{{ fsm_maintenance_dir }}/job_working_dir.sh"
-#    user: "{{ fsm_galaxy_user.username }}"
-#    group: "{{ fsm_galaxy_user.groupname }}"
-#    paths:
-#      - "{{ galaxy_config['galaxy']['job_working_directory'] }}"
-#      - /data/dnb-ds03/galaxy_db/job_working_directory
-#      - /data/jwd/main
-#    time: "{{ fsm_intervals.long }}"
-# Docker is not used on headnode anymore, gxadmin cleanup needs to run only once - commented 11/29/2022
 #fsm_cron_tasks:
-#  docker:
-#    enable: false
-##    name: "Docker clean up"
-##    minute: 30
-##    hour: 2
-##    dom: "*"
-##    month: "*"
-##    dow: "*"
-##    job: ". {{ galaxy_root }}/.bashrc && docker system prune -f > /dev/null"
-##    user: "{{ fsm_galaxy_user.username }}"
 #  gxadmin:
 #    enable: false
 ##    name: "Gxadmin Galaxy clean up"
@@ -89,25 +78,17 @@ conda_prefix: /opt/miniconda
 ##    dow: "*"
 ##    job: "{{ custom_telegraf_env }} /usr/bin/gxadmin galaxy cleanup 60"
 ##    user: "{{ fsm_galaxy_user.username }}"
-##
-#fsm_htcondor_enable: false
 
-# TIaaS
-tiaas_virtualenv_python: "python3.8"
+# Role: galaxyproject.tiaas2
+tiaas_virtualenv_python: 'python3.8'
 
-# Telegraf
-telegraf_agent_hostname: "{{ hostname }}"
+# Role: dj-wasabi.telegraf
+telegraf_agent_hostname: '{{ hostname }}'
 telegraf_agent_version: 1.17.2
-custom_telegraf_env: "/usr/bin/env GDPR_MODE=1 PGUSER={{ galaxy_user.name }} PGHOST={{ postgres_host }} GALAXY_ROOT={{ galaxy_server_dir }} GALAXY_CONFIG_FILE={{ galaxy_config_file }} GALAXY_LOG_DIR={{ galaxy_log_dir }} GXADMIN_PYTHON={{ galaxy_venv_dir }}/bin/python"
+custom_telegraf_env: '/usr/bin/env GDPR_MODE=1 PGUSER={{ galaxy_user.name }} PGHOST={{ postgres_host }} GALAXY_ROOT={{ galaxy_server_dir }} GALAXY_CONFIG_FILE={{ galaxy_config_file }} GALAXY_LOG_DIR={{ galaxy_log_dir }} GXADMIN_PYTHON={{ galaxy_venv_dir }}/bin/python'
 telegraf_plugins_extra:
-  postgres:
-    plugin: "postgresql"
-    config:
-      - address = "{{ galaxy_db_connection }}"
-      - databases = ["galaxy", "galaxy-test", "apollo", "chado"]
-
   listen_galaxy_routes:
-    plugin: "statsd"
+    plugin: 'statsd'
     config:
       - service_address = ":8125"
       - percentiles = [90]
@@ -115,38 +96,26 @@ telegraf_plugins_extra:
       - allowed_pending_messages = 10000
       - percentile_limit = 100
 
-  monitor_nfsstat:
-    plugin: "exec"
-    config:
-      - commands = ["/usr/bin/nfsstat-influx"]
-      - timeout = "10s"
-      - data_format = "influx"
-      - interval = "15s"
+  # # Some custom galaxy monitoring stuff that can only run on the Galaxy server (only on one headnode)
+  # galaxy_lastlog:
+  #   plugin: "exec"
+  #   config:
+  #     - commands = ["{{ custom_telegraf_env }} /usr/bin/gxadmin gunicorn lastlog"]
+  #     - timeout = "15s"
+  #     - data_format = "influx"
+  #     - interval = "15s"
+  # galaxy_active_users:
+  #   plugin: "exec"
+  #   config:
+  #     - commands = ["/usr/bin/gxadmin gunicorn active-users"]
+  #     - timeout = "15s"
+  #     - data_format = "influx"
+  #     - interval = "1m"
 
-# Custom pip installer
-pip_venv_path: "{{ galaxy_venv_dir }}"
-pip_install_dependencies:
-  # celery and flower
-  - redis
-  - flower
-  # phdcomics
-  - beautifulsoup4
-  # Used by code_files for apollo
-  - biopython
-  - bcbio-gff
-  # Needed for tool watching
-  - watchdog
-  # Needed gxadmin graphs
-  - data_hacks
-  # used by reports
-  - WeasyPrint
-  - nbconvert
-  - gitlab-arc-fs
-
+# Misc
 yum_exclude_repos:
   - condor*
   - npm*
-
 all_yum_repositories:
   - name: galaxy_gpel
     description: Galaxy Packages for Enterprise Linux $releasever - $basearch
@@ -156,28 +125,15 @@ all_yum_repositories:
     retries: 1
     timeout: 10
 
-# Galaxy monitoring
-monitor_condor: true
-monitor_condor_split_util: true
+# GRT
+galaxy_grt_exporter: galaxy
+galaxy_grt_uploader: galaxy
 
-# Certbot
-certbot_virtualenv_package_name: python3-virtualenv
-certbot_dns_provider: route53
-certbot_auth_method: --standalone
-certbot_domains: "{{ server_names }}"
-certbot_post_renewal: |
-  systemctl restart nginx || true
-certbot_share_key_users:
-  - nginx
+# Influx Notifier
+gxadmin_influx_task_notifier: true
+gxadmin_influx_task_notifier_db: notifications
 
-# AWS Credentials for certbot-route53
-aws_cli_credentials:
-  - access_key: "{{ aws_credentials.certbot.AWS_ACCESS_KEY }}"
-    secret_key: "{{ aws_credentials.certbot.AWS_SECRET_KEY }}"
-    homedir: /root
-    owner: root
-    group: root
-
+# Role: usegalaxy-eu.nginx
 # Nginx
 nginx_servers:
   - redirect-ssl
@@ -185,18 +141,17 @@ nginx_ssl_servers:
   - galaxyproject
   - telescope-ssl
   - galaxy-main
-  - galaxy-ie-main
   - galaxy-test-proxy
 nginx_conf_http:
   client_max_body_size: 1g
-  proxy_cache_path: "/tmp/nginx-cache levels=1:2 keys_zone=STATIC:10m inactive=24h  max_size=1g"
-  gzip: "on"
+  proxy_cache_path: '/tmp/nginx-cache levels=1:2 keys_zone=STATIC:10m inactive=24h  max_size=1g'
+  gzip: 'on'
   gzip_proxied: any
   # The ngx_http_gzip_static_module module allows sending precompressed files with the “.gz” filename extension instead of regular files.
-  gzip_static: "on"
-  gzip_http_version: "1.1"
+  gzip_static: 'on'
+  gzip_http_version: '1.1'
   gzip_disable: '"MSIE [1-6]\."'
-  gzip_vary: "on"
+  gzip_vary: 'on'
   gzip_comp_level: 6
   gzip_types: |
     text/plain
@@ -214,265 +169,240 @@ nginx_conf_http:
     image/png
     image/svg+xml
     image/x-icon
-  gzip_buffers: "16 8k"
+  gzip_buffers: '16 8k'
   gzip_min_length: 128
 nginx_enable_default_server: false
-nginx_flavor: ""
+nginx_flavor: ''
 
 # Nginx Letsencrypt bindings
 nginx_ssl_role: usegalaxy-eu.certbot
 nginx_conf_ssl_certificate: /etc/ssl/certs/fullchain.pem
 nginx_conf_ssl_certificate_key: /etc/ssl/user/privkey-nginx.pem
 
-# Dynmotd
+## Role: usegalaxy-eu.certbot used by nginx role above
+certbot_virtualenv_package_name: python3-virtualenv
+certbot_dns_provider: route53
+certbot_auth_method: --standalone
+certbot_domains: '{{ server_names }}'
+certbot_post_renewal: |
+  systemctl restart nginx || true
+certbot_share_key_users:
+  - nginx
+
+## Role: hxr.aws-cli
+# AWS Credentials for certbot-route53
+aws_cli_credentials:
+  - access_key: '{{ aws_credentials.certbot.AWS_ACCESS_KEY }}'
+    secret_key: '{{ aws_credentials.certbot.AWS_SECRET_KEY }}'
+    homedir: /root
+    owner: root
+    group: root
+
+# Role: usegalaxy-eu.dynmotd
 dynmotd_custom:
   - name: Condor
-    command: "condor_q -totals | tail -n 2"
+    command: 'condor_q -totals | tail -n 2'
 
-# TPV Script
+# Role: usegalaxy_eu.tpv_auto_lint
 tpv_config_dir_name: total_perspective_vortex
 
-# CVMFS
+# Role: galaxyproject.cvmfs
 cvmfs_role: client
 galaxy_cvmfs_repos_enabled: config-repo
-
 galaxy_cvmfs_server_urls:
   - domain: galaxyproject.org
     urls:
-      - "http://cvmfs1-ufr0.galaxyproject.eu/cvmfs/@fqrn@"
+      - 'http://cvmfs1-ufr0.galaxyproject.eu/cvmfs/@fqrn@'
 
-# SystemD
-galaxy_systemd_mode: "gunicorn"
-galaxy_systemd_gunicorns: 2
+# Role: usegalaxy_eu.galaxy_systemd
+galaxy_systemd_mode: 'gunicorn'
+galaxy_systemd_gunicorns: 3
 galaxy_systemd_gunicorn_workers: 4
 galaxy_systemd_gunicorn_timeout: 600
 galaxy_systemd_handlers: 0
 galaxy_systemd_workflow_schedulers: 0
-
-galaxy_systemd_gunicorn_env: "{{ apollo_env }}"
-galaxy_systemd_handler_env: "{{ galaxy_systemd_gunicorn_env }}"
-galaxy_systemd_workflow_scheduler_env: "{{ galaxy_systemd_gunicorn_env }}"
-
-galaxy_systemd_memory_limit: 120
-galaxy_systemd_memory_limit_handler: 12
+galaxy_systemd_gunicorn_env: '{{ apollo_env }}'
+galaxy_systemd_handler_env: '{{ galaxy_systemd_gunicorn_env }}'
+galaxy_systemd_workflow_scheduler_env: '{{ galaxy_systemd_gunicorn_env }}'
+galaxy_systemd_memory_limit: 40
+galaxy_systemd_memory_limit_handler: 30
 galaxy_systemd_memory_limit_workflow: 15
 
-# HTCondor
-condor_host: "condor-cm.galaxyproject.eu"
-condor_fs_domain: bi.uni-freiburg.de
-condor_uid_domain: bi.uni-freiburg.de
-condor_allow_write: "10.5.68.0/24, 132.230.223.0/24"
-condor_daemons:
-  - MASTER
-  - SCHEDD
-condor_allow_negotiator: "10.5.68.237,$(CONDOR_HOST)"
-condor_allow_administrator: "$(ALLOW_NEGOTIATOR)"
+# Role: usegalaxy_eu.gie_proxy (disabled: only on one head node for now, due to the sqlite on NFS issue)
+# gie_proxy_dir: "{{ galaxy_root }}/gie-proxy/proxy"
+# gie_proxy_git_version: main
+# gie_proxy_setup_nodejs: nodeenv
+# gie_proxy_virtualenv_command: "{{ conda_prefix }}/envs/_galaxy_/bin/python -m venv --copies" #"{{ pip_virtualenv_command }}"
+# gie_proxy_nodejs_version: "10.13.0"
+# gie_proxy_virtualenv: "{{ galaxy_root }}/gie-proxy/venv"
+# gie_proxy_setup_service: systemd
+# gie_proxy_sessions_path: "{{ galaxy_mutable_data_dir }}/interactivetools_map.sqlite"
+# gie_proxy_port: 8800
+# gie_proxy_verbose: true
 
-condor_system_periodic_hold: "{{ 30 * 24 * 60 * 60}}"
-condor_system_periodic_remove: "{{ 2 * 24 * 60 * 60}}"
-condor_network_interface: ens802f0.2368
-condor_extra: |
-  MASTER_UPDATE_INTERVAL = 150
-  SCHEDD_INTERVAL = 60
-  JOB_START_COUNT = 250
-  JOB_START_DELAY = 0
-  CLAIM_WORKLIFE = 120
-
-# gie_proxy
-gie_proxy_dir: "{{ galaxy_root }}/gie-proxy/proxy"
-gie_proxy_git_version: main
-gie_proxy_setup_nodejs: nodeenv
-gie_proxy_virtualenv_command: "{{ conda_prefix }}/envs/_galaxy_/bin/python -m venv --copies" #"{{ pip_virtualenv_command }}"
-gie_proxy_nodejs_version: "10.13.0"
-gie_proxy_virtualenv: "{{ galaxy_root }}/gie-proxy/venv"
-gie_proxy_setup_service: systemd
-gie_proxy_sessions_path: "{{ galaxy_mutable_data_dir }}/interactivetools_map.sqlite"
-gie_proxy_port: 8800
-gie_proxy_verbose: true
-
-# gxadmin
-postgres_user: galaxy
-postgres_host: sn05.galaxyproject.eu
-postgres_port: 5432
-
-# Slurp script
-galaxy_slurper: galaxy
-galaxy_slurp_influx_pass: "{{ influxdb.node.password }}"
-galaxy_slurp_influx_user: "{{ influxdb.node.username }}"
-galaxy_slurp_influx_url: "{{ influxdb.url }}"
-
-# GRT
-galaxy_grt_exporter: galaxy
-galaxy_grt_uploader: galaxy
-
-# Influx Notifier
-gxadmin_influx_task_notifier: true
-gxadmin_influx_task_notifier_db: notifications
-
-# postgres_pass defined in secret_group_vars/all.yml
+# Role: galaxyproject.gxadmin
 gxadmin_commit: main
 gxadmin_dir: /opt/gxadmin
 gxadmin_bin_dir: /usr/bin
 gxadmin_force: true
 
-# GALAXY
-galaxy_group:
-  name: galaxy
-  gid: 999
+# Role: hxr.install-to-venv
+# Custom pip installer
+pip_venv_path: '{{ galaxy_venv_dir }}'
+pip_install_dependencies:
+  # celery and flower
+  - redis
+  - flower
+  # phdcomics
+  - beautifulsoup4
+  # Used by code_files for apollo
+  - biopython
+  - bcbio-gff
+  # Needed for tool watching
+  - watchdog
+  # Needed gxadmin graphs
+  - data_hacks
+  # used by reports
+  - WeasyPrint
+  - nbconvert
+  - gitlab-arc-fs
+  # Needed for usegalaxy-eu.vgcn-monitoring Telegraf role
+  - pyyaml
+  - GitPython
+  - python-openstackclient
+  # WallE
+  - tqdm # progress bar, has no dependencies
+
+# Role: galaxyproject.galaxy
+hostname: '{{ inventory_hostname }}'
+galaxy_root: /opt/galaxy
+galaxy_venv_dir: '{{ galaxy_root }}/venv'
+galaxy_server_dir: '{{ galaxy_root }}/server'
+galaxy_config_dir: '{{ galaxy_root }}/config'
+galaxy_config_file: '{{ galaxy_config_dir }}/galaxy.yml'
+galaxy_mutable_config_dir: '{{ galaxy_root }}/mutable-config'
+galaxy_log_dir: '/var/log/galaxy'
+galaxy_home_dir: '{{ galaxy_user.home }}'
+galaxy_mutable_data_dir: '{{ galaxy_root }}/mutable-data'
+galaxy_shed_tools_dir: '{{ galaxy_root }}/shed_tools'
+galaxy_tool_data_path: '{{ galaxy_root }}/tool-data'
+__galaxy_shed_tools_dir: '{{ galaxy_shed_tools_dir }}'
 galaxy_system_group: galaxy
-galaxy_log_dir: "/var/log/galaxy"
 galaxy_layout: root-dir
 galaxy_separate_privileges: true
-galaxy_manage_paths: true
-galaxy_build_client: false
 galaxy_restart_handler_name: Restart Galaxy
-galaxy_create_user: true
-galaxy_user:
-  name: galaxy
-  create_home: true
-  home: /opt/galaxy
-  uid: 999
-  shell: /bin/bash
-
-# Galaxy configuration files will be written with these permissions (mode argument to Ansible copy/template module)
+galaxy_instance_hostname: usegalaxy.eu
+galaxy_config_style: yaml
 galaxy_config_perms: 0644
-
-galaxy_root: /opt/galaxy
-galaxy_workflow_scheduler_count: "{{ galaxy_systemd_workflow_schedulers }}"
-galaxy_home_dir: /opt/galaxy
-galaxy_mutable_config_dir: "{{ galaxy_root }}/mutable-config"
-galaxy_mutable_data_dir: "{{ galaxy_root }}/mutable-data"
-galaxy_shed_tools_dir: "{{ galaxy_root }}/shed_tools"
-galaxy_tool_data_path: "{{ galaxy_root }}/tool-data"
-__galaxy_shed_tools_dir: "{{ galaxy_shed_tools_dir }}"
+galaxy_workflow_scheduler_count: '{{ galaxy_systemd_workflow_schedulers }}'
 galaxy_backup_configfiles: false
-
-galaxy_server_dir: "{{ galaxy_root }}/server"
-galaxy_config_dir: "{{ galaxy_root }}/config"
-galaxy_venv_dir: "{{ galaxy_root }}/venv"
 galaxy_job_working_directory: "{{ galaxy_config['galaxy']['job_working_directory'] }}"
 ucsc_build_sites:
-
-galaxy_virtualenv_command: "{{ conda_prefix }}/envs/_galaxy_/bin/python -m venv --copies"
-galaxy_nonrepro_tools: "{{ galaxy_root }}/custom-tools"
+galaxy_virtualenv_command: '{{ conda_prefix }}/envs/_galaxy_/bin/python -m venv --copies'
+galaxy_nonrepro_tools: '{{ galaxy_root }}/custom-tools'
 galaxy_nonrepro_commit: master
+galaxy_themes_subdomains: []
 
 # Custom override
 # Our galaxy_tool_dependency_dir is on NFS, and permissions are set in such a
 # way that they cannot be changed by the ansible connected user.
 galaxy_dirs:
-  - "{{ galaxy_mutable_data_dir }}"
-  - "{{ galaxy_mutable_config_dir }}"
-  - "{{ galaxy_cache_dir }}"
-  - "{{ galaxy_shed_tools_dir }}"
+  - '{{ galaxy_mutable_data_dir }}'
+  - '{{ galaxy_mutable_config_dir }}'
+  - '{{ galaxy_cache_dir }}'
+  - '{{ galaxy_shed_tools_dir }}'
   #- "{{ galaxy_tool_dependency_dir }}"
-  - "{{ galaxy_file_path }}"
-  - "{{ galaxy_job_working_directory }}"
-  - "{{ galaxy_tool_data_path }}"
-  - "{{ galaxy_nonrepro_tools }}"
-  - "{{ galaxy_webhook_dir }}"
-  - "{{ galaxy_tour_dir }}"
-  - "{{ galaxy_log_dir }}"
-  - "{{ galaxy_config_dir }}/total_perspective_vortex"
-  - "{{ tpv_mutable_dir }}"
+  - '{{ galaxy_file_path }}'
+  - '{{ galaxy_job_working_directory }}'
+  - '{{ galaxy_tool_data_path }}'
+  - '{{ galaxy_nonrepro_tools }}'
+  - '{{ galaxy_webhook_dir }}'
+  - '{{ galaxy_tour_dir }}'
+  - '{{ galaxy_log_dir }}'
+  - '{{ galaxy_config_dir }}/total_perspective_vortex'
+  - '{{ tpv_mutable_dir }}'
 
-galaxy_instance_hostname: usegalaxy.eu
-galaxy_config_style: yaml
-
-galaxy_repo: "https://github.com/usegalaxy-eu/galaxy.git"
-galaxy_commit_id: "release_22.05_europe"
+galaxy_repo: 'https://github.com/usegalaxy-eu/galaxy.git'
+galaxy_commit_id: 'release_24.0_europe'
 galaxy_force_checkout: true # discard any modified files
-#galaxy_admin_email_from: 'noreply@usegalaxy.eu'
-
-galaxy_singularity_images_cvmfs_path: "/cvmfs/singularity.galaxyproject.org/all/"
-
-galaxy_config: "{{ galaxy_config_hash }}"
+galaxy_singularity_images_cvmfs_path: '/cvmfs/singularity.galaxyproject.org/all/'
+galaxy_config: '{{ galaxy_config_hash }}'
 
 galaxy_config_file_src_dir: files/galaxy
 galaxy_config_files:
   # TODO(bgruening): sync this with cvmfs? can we have ours be just a small additional builds.txt?
-  - src: "{{ galaxy_config_file_src_dir }}/config/builds.txt"
+  - src: '{{ galaxy_config_file_src_dir }}/config/builds.txt'
     dest: "{{ galaxy_config['galaxy']['builds_file_path'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/data_manager_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/data_manager_conf.xml'
     dest: "{{ galaxy_config['galaxy']['data_manager_config_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/datatypes_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/datatypes_conf.xml'
     dest: "{{ galaxy_config['galaxy']['datatypes_config_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/dependency_resolvers_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/dependency_resolvers_conf.xml'
     dest: "{{ galaxy_config['galaxy']['dependency_resolvers_config_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/email_domain_blocklist.conf"
+  - src: '{{ galaxy_config_file_src_dir }}/config/email_domain_blocklist.conf'
     dest: "{{ galaxy_config['galaxy']['email_domain_blocklist_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/user_preferences_extra_conf.yml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/user_preferences_extra_conf.yml'
     dest: "{{ galaxy_config['galaxy']['user_preferences_extra_conf_path'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/job_resource_params_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/job_resource_params_conf.xml'
     dest: "{{ galaxy_config['galaxy']['job_resource_params_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/trs_servers_conf.yml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/trs_servers_conf.yml'
     dest: "{{ galaxy_config['galaxy']['trs_servers_config_file'] }}"
-  # test? Unknown if this works.
-  - src: "{{ galaxy_config_file_src_dir }}/config/error_report.yml"
-    dest: "{{ galaxy_config_dir }}/error_report.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/config/job_metrics_conf.yml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/themes_conf.yml'
+    dest: "{{ galaxy_config['galaxy']['themes_config_file'] }}"
+  - src: '{{ galaxy_config_file_src_dir }}/config/error_report.yml'
+    dest: '{{ galaxy_config_dir }}/error_report.yml'
+  - src: '{{ galaxy_config_file_src_dir }}/config/job_metrics_conf.yml'
     dest: "{{ galaxy_config['galaxy']['job_metrics_config_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/migrated_tools_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/migrated_tools_conf.xml'
     dest: "{{ galaxy_config['galaxy']['migrated_tools_config'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/tool_data_table_conf.xml"
-    dest: "{{ galaxy_config_dir }}/tool_data_table_conf.xml"
-  - src: "{{ galaxy_config_file_src_dir }}/config/tool_sheds_conf.xml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/tool_data_table_conf.xml'
+    dest: '{{ galaxy_config_dir }}/tool_data_table_conf.xml'
+  - src: '{{ galaxy_config_file_src_dir }}/config/tool_sheds_conf.xml'
     dest: "{{ galaxy_config['galaxy']['tool_sheds_config_file'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/ucsc_build_sites.txt"
+  - src: '{{ galaxy_config_file_src_dir }}/config/ucsc_build_sites.txt'
     dest: "{{ galaxy_config['galaxy']['ucsc_build_sites'] }}"
-  - src: "{{ galaxy_config_file_src_dir }}/config/echo_main_env.xml"
-    dest: "{{ galaxy_config_dir }}/echo_main_env.xml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/tool_defaults.yml"
-    dest: "{{ tpv_mutable_dir }}/tool_defaults.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/destinations.yml"
-    dest: "{{ tpv_mutable_dir }}/destinations.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/tools.yml"
-    dest: "{{ tpv_mutable_dir }}/tools.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/roles.yml"
-    dest: "{{ tpv_mutable_dir }}/roles.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/interactive_tools.yml"
-    dest: "{{ tpv_mutable_dir }}/interactive_tools.yml"
-  - src: "{{ galaxy_config_file_src_dir }}/tpv/users.yml"
-    dest: "{{ tpv_mutable_dir }}/users.yml"
-
-  #- src: files/galaxy/config/job_resource_params_conf.xml
-  #dest: "{{ galaxy_config['app:main']['job_resource_params_file'] }}"
-  #- src: files/galaxy/config/pulsar_stampede_actions.yml
-  #dest: "{{ galaxy_config_dir }}/pulsar_stampede_actions.yml"
-  #- src: files/galaxy/config/pulsar_bridges_actions.yml
-  #dest: "{{ galaxy_config_dir }}/pulsar_bridges_actions.yml"
-  #- src: files/galaxy/config/pulsar_jetstream.yml
-  #dest: "{{ galaxy_config_dir }}/pulsar_jetstream.yml"
-  #- src: files/galaxy/config/pulsar_jetstream_actions.yml
-  #dest: "{{ galaxy_config_dir }}/pulsar_jetstream_actions.yml"
+  - src: '{{ galaxy_config_file_src_dir }}/config/echo_main_env.xml'
+    dest: '{{ galaxy_config_dir }}/echo_main_env.xml'
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/tool_defaults.yml'
+    dest: '{{ tpv_mutable_dir }}/tool_defaults.yml'
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/tools.yml'
+    dest: '{{ tpv_mutable_dir }}/tools.yml'
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/roles.yml'
+    dest: '{{ tpv_mutable_dir }}/roles.yml'
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/interactive_tools.yml'
+    dest: '{{ tpv_mutable_dir }}/interactive_tools.yml'
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/users.yml'
+    dest: '{{ tpv_mutable_dir }}/users.yml'
 
 galaxy_config_template_src_dir: templates/galaxy
 galaxy_config_templates:
-  - src: "{{ galaxy_config_template_src_dir }}/config/build_sites.yml.j2"
+  - src: '{{ galaxy_config_template_src_dir }}/config/build_sites.yml.j2'
     dest: "{{ galaxy_config['galaxy']['build_sites_config_file'] }}"
-  - src: "{{ galaxy_config_template_src_dir }}/config/global_host_filters.py.j2"
-    dest: "{{ galaxy_server_dir }}/lib/galaxy/tool_util/toolbox/filters/global_host_filters.py"
-  - src: "{{ galaxy_config_template_src_dir }}/config/job_conf.yml.j2"
-    dest: "{{ galaxy_config_dir }}/job_conf.yml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/container_resolvers_conf.xml.j2"
-    dest: "{{ galaxy_config_dir }}/container_resolvers_conf.xml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/user_filters.py.j2"
-    dest: "{{ galaxy_server_dir }}/lib/galaxy/tool_util/toolbox/filters/user_filters.py"
-  - src: "{{ galaxy_config_template_src_dir }}/config/nagios_tool_conf.xml"
-    dest: "{{ galaxy_config_dir }}/nagios_tool_conf.xml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/oidc_backends_config.xml"
+  - src: '{{ galaxy_config_template_src_dir }}/config/global_host_filters.py.j2'
+    dest: '{{ galaxy_server_dir }}/lib/galaxy/tool_util/toolbox/filters/global_host_filters.py'
+  - src: '{{ galaxy_config_template_src_dir }}/config/job_conf.yml.j2'
+    dest: '{{ galaxy_config_dir }}/job_conf.yml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/container_resolvers_conf.xml.j2'
+    dest: '{{ galaxy_config_dir }}/container_resolvers_conf.xml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/user_filters.py.j2'
+    dest: '{{ galaxy_server_dir }}/lib/galaxy/tool_util/toolbox/filters/user_filters.py'
+  - src: '{{ galaxy_config_template_src_dir }}/config/nagios_tool_conf.xml'
+    dest: '{{ galaxy_config_dir }}/nagios_tool_conf.xml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/oidc_backends_config.xml'
     dest: "{{ galaxy_config['galaxy']['oidc_backends_config_file'] }}"
-  - src: "{{ galaxy_config_template_src_dir }}/config/oidc_config.xml"
+  - src: '{{ galaxy_config_template_src_dir }}/config/oidc_config.xml'
     dest: "{{ galaxy_config['galaxy']['oidc_config_file'] }}"
-  - src: "{{ galaxy_config_template_src_dir }}/config/grt.yml.j2"
-    dest: "{{ galaxy_config_dir }}/grt.yml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/pulsar_app.yml"
-    dest: "{{ galaxy_config_dir }}/pulsar_app.yml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/tool_conf.xml.j2"
-    dest: "{{ galaxy_config_dir }}/tool_conf.xml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/galaxy_workflow_scheduler.j2"
-    dest: "{{ galaxy_config_dir }}/workflow_schedulers_conf.xml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/file_sources_conf.yml.j2"
-    dest: "{{ galaxy_config_dir }}/file_sources_conf.yml"
-  - src: "{{ galaxy_config_template_src_dir }}/config/object_store_conf.xml.j2"
+  - src: '{{ galaxy_config_template_src_dir }}/config/grt.yml.j2'
+    dest: '{{ galaxy_config_dir }}/grt.yml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/pulsar_app.yml'
+    dest: '{{ galaxy_config_dir }}/pulsar_app.yml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/tool_conf.xml.j2'
+    dest: '{{ galaxy_config_dir }}/tool_conf.xml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/galaxy_workflow_scheduler.j2'
+    dest: '{{ galaxy_config_dir }}/workflow_schedulers_conf.xml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/file_sources_conf.yml.j2'
+    dest: '{{ galaxy_config_dir }}/file_sources_conf.yml'
+  - src: '{{ galaxy_config_template_src_dir }}/config/object_store_conf.xml.j2'
     dest: "{{ galaxy_config['galaxy']['object_store_config_file'] }}"
+  - src: '{{ galaxy_config_file_src_dir }}/tpv/destinations.yml.j2'
+    dest: '{{ tpv_mutable_dir }}/destinations.yml'
