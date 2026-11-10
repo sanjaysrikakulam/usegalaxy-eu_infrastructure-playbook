@@ -537,6 +537,28 @@ destinations:
       submit_native_specification: "--partition=l40s --nodes=1 --ntasks-per-node=1 --cpus-per-task={int(cores)} --mem={int(mem * 1024)} --gres=gres/gpu:{int(gpus)} --time=10:00:00 -J pulsar_3dtrees_j{job.id}"
       singularity_run_extra_arguments: "--nv --bind \"$_GALAXY_JOB_TMP_DIR:/tmp\" --bind \"$_GALAXY_JOB_TMP_DIR:/home/datascience\" --bind \"$_GALAXY_JOB_TMP_DIR:/in\""
 
+  pulsar_alice01_byoc_tpv:
+    inherits: pulsar_default
+    runner: pulsar_eu_alice01_byoc
+    max_accepted_cores: 8
+    max_accepted_mem: 31
+    min_accepted_gpus: 0
+    max_accepted_gpus: 0
+    env:
+      SINGULARITY_CACHEDIR: "/mnt/alice/var/database/container_cache"
+    params:
+      jobs_directory: "/mnt/alice/staging"
+      persistence_directory: "/mnt/alice/persisted_data"
+    scheduling:
+      require:
+        - alice01-byoc-pulsar
+    rules:
+      - id: byoc-owner-guard
+        if: "user is None or user.email != \"alice@example.org\""
+        execute: |
+          from tpv.core.entities import TryNextDestinationOrFail
+          raise TryNextDestinationOrFail("pulsar_alice01_byoc_tpv only accepts jobs of its owner")
+
   #############################
   # LOCAL CONDOR DESTINATIONS #
   #############################

@@ -267,6 +267,17 @@ galaxy_jobconf:
         relay_password: "{{ pulsar_nemo_3dtrees_relay_password }}"
         relay_topic_prefix: "{{ pulsar_nemo_3dtrees_relay_topic_prefix }}"
         galaxy_url: "https://usegalaxy.eu"
+    - id: pulsar_eu_alice01_byoc
+      load: galaxy.jobs.runners.pulsar:PulsarMQJobRunner
+      params:
+        amqp_url: "pyamqp://galaxy_alice01_byoc:{{ rabbitmq_password_galaxy_alice01_byoc }}@mq.galaxyproject.eu:5671//pulsar/galaxy_alice01_byoc?ssl=1"
+        galaxy_url: "https://usegalaxy.eu"
+        manager: production
+        amqp_acknowledge: "true"
+        amqp_ack_republish_time: 300
+        amqp_consumer_timeout: 2.0
+        amqp_publish_retry: "true"
+        amqp_publish_retry_max_retries: 60
 
 
   default_destination: tpv_dispatcher
