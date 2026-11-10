@@ -559,6 +559,23 @@ destinations:
           from tpv.core.entities import TryNextDestinationOrFail
           raise TryNextDestinationOrFail("pulsar_alice01_byoc_tpv only accepts jobs of its owner")
 
+  pulsar_bjoern01_byoc_tpv:
+    inherits: pulsar_default
+    runner: pulsar_eu_bjoern01_byoc
+    max_accepted_cores: 8
+    max_accepted_mem: 31
+    min_accepted_gpus: 0
+    max_accepted_gpus: 0
+    scheduling:
+      require:
+        - bjoern01-byoc-pulsar
+    rules:
+      - id: byoc-owner-guard
+        if: "user is None or user.email != \"bjoern.gruening@gmail.com\""
+        execute: |
+          from tpv.core.entities import TryNextDestinationOrFail
+          raise TryNextDestinationOrFail("pulsar_bjoern01_byoc_tpv only accepts jobs of its owner")
+
   #############################
   # LOCAL CONDOR DESTINATIONS #
   #############################
