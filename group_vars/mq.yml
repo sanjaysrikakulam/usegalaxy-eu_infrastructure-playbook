@@ -137,9 +137,6 @@ rabbitmq_users:
   - user: galaxy_bob01_byoc
     password: '{{ rabbitmq_password_galaxy_bob01_byoc }}'
     vhost: /pulsar/galaxy_bob01_byoc
-  - user: galaxy_grace01_byoc
-    password: '{{ rabbitmq_password_galaxy_grace01_byoc }}'
-    vhost: /pulsar/galaxy_grace01_byoc
 
 rabbitmq_plugins:
   - rabbitmq_management
