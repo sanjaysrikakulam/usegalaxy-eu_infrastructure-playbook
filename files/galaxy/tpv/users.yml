@@ -32,3 +32,13 @@ users:
         rank: |
           byoc = [d for d in candidate_destinations if d.id == "pulsar_alice01_byoc_tpv"]
           byoc + helpers.weighted_random_sampling([d for d in candidate_destinations if d.id != "pulsar_alice01_byoc_tpv"])
+  '^bjoern\.gruening@gmail\.com$':
+    rules:
+      - id: byoc-pulsar-bjoern01
+        if: true
+        scheduling:
+          prefer:
+            - bjoern01-byoc-pulsar
+        rank: |
+          byoc = [d for d in candidate_destinations if d.id == "pulsar_bjoern01_byoc_tpv"]
+          byoc + helpers.weighted_random_sampling([d for d in candidate_destinations if d.id != "pulsar_bjoern01_byoc_tpv"])
