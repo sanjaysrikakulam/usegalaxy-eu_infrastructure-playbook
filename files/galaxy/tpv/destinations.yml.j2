@@ -579,10 +579,10 @@ destinations:
   pulsar_bob01_byoc_tpv:
     inherits: pulsar_default
     runner: pulsar_eu_bob01_byoc
-    max_accepted_cores: 4
-    max_accepted_mem: 15
+    max_accepted_cores: 16
+    max_accepted_mem: 60
     min_accepted_gpus: 0
-    max_accepted_gpus: 0
+    max_accepted_gpus: 1
     scheduling:
       require:
         - bob01-byoc-pulsar
