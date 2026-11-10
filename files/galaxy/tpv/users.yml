@@ -42,3 +42,13 @@ users:
         rank: |
           byoc = [d for d in candidate_destinations if d.id == "pulsar_bjoern01_byoc_tpv"]
           byoc + helpers.weighted_random_sampling([d for d in candidate_destinations if d.id != "pulsar_bjoern01_byoc_tpv"])
+  '^bob@example\.org$':
+    rules:
+      - id: byoc-pulsar-bob01
+        if: true
+        scheduling:
+          prefer:
+            - bob01-byoc-pulsar
+        rank: |
+          byoc = [d for d in candidate_destinations if d.id == "pulsar_bob01_byoc_tpv"]
+          byoc + helpers.weighted_random_sampling([d for d in candidate_destinations if d.id != "pulsar_bob01_byoc_tpv"])
