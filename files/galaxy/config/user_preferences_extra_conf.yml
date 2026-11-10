@@ -155,6 +155,10 @@ preferences:
               label: Maximum number of GPU available (set this to zero if you don't want to share GPUs).
               type: number
               required: False
+            - name: nfs_path
+              label: Path of the NFS share your Pulsar uses for staging, persisted data and the container cache (e.g. /data/share).
+              type: text
+              required: False
 
     omero_account:
         description: Your OMERO instance connection details
