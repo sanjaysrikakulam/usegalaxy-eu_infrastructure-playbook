@@ -131,6 +131,9 @@ rabbitmq_users:
   - user: galaxy_ufz_eve01
     password: '{{ rabbitmq_password_galaxy_ufz_eve01 }}'
     vhost: /pulsar/galaxy_ufz_eve01
+  - user: galaxy_alice01_byoc
+    password: '{{ rabbitmq_password_galaxy_alice01_byoc }}'
+    vhost: /pulsar/galaxy_alice01_byoc
 
 rabbitmq_plugins:
   - rabbitmq_management
